@@ -1,11 +1,12 @@
 from telegram.ext import Updater, MessageHandler, Filters
 from telegram.ext import CallbackContext, CommandHandler
+from yandex_music.utils.request import Request as YandexRequest
 
 
 def start(update, context):
     update.message.reply_text(
         "Привет! Я Магнитола Бот. Напишите мне номер команды и я их выполню.\n"
-        + "Напиши мне \\help для большей информации.")
+        + "Напиши мне /help для большей информации.")
 
 
 def help(update, context):
