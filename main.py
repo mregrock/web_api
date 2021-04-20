@@ -91,7 +91,9 @@ class MusicSearch:
         self.dp.add_handler(self.text_handler)
 
     def choose_track(self, update, context):
-        update.message.reply_audio(open(self.top[int(update.message.text) - 1][0], 'rb'), reply_markup=markup)
+        number = int(update.message.text) - 1
+        self.top[number][1].download(self.top[number][0])
+        update.message.reply_audio(open(self.top[number][0], 'rb'), reply_markup=markup)
         os.remove(self.top[int(update.message.text) - 1][0])
         self.dp.remove_handler(self.text_handler)
 
