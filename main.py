@@ -63,15 +63,6 @@ class MusicSearch:
                     best_result_text = best.title + artists
                     download_file = best_result_text + ".mp3"
                     self.top.append((download_file, search_result.tracks.results[i]))
-                elif type_ == 'artist':
-                    best_result_text = best.name
-                elif type_ in ['album', 'podcast']:
-                    best_result_text = best.title
-                elif type_ == 'playlist':
-                    best_result_text = best.title
-                elif type_ == 'video':
-                    best_result_text = f'{best.title} {best.text}'
-
                 text.append(f'{i + 1}. {best_result_text}\n')
 
         if search_result.artists:
@@ -91,11 +82,14 @@ class MusicSearch:
         self.dp.add_handler(self.text_handler)
 
     def choose_track(self, update, context):
-        number = int(update.message.text) - 1
-        self.top[number][1].download(self.top[number][0])
-        update.message.reply_audio(open(self.top[number][0], 'rb'), reply_markup=markup)
-        os.remove(self.top[int(update.message.text) - 1][0])
-        self.dp.remove_handler(self.text_handler)
+        try:
+            number = int(update.message.text) - 1
+            self.top[number][1].download(self.top[number][0])
+            update.message.reply_audio(open(self.top[number][0], 'rb'), reply_markup=markup)
+            os.remove(self.top[int(update.message.text) - 1][0])
+            self.dp.remove_handler(self.text_handler)
+        except ValueError:
+            update.message.reply_text("Ошибка! Введите число")
 
 
 def main():
