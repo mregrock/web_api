@@ -99,6 +99,7 @@ def main():
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("close_keyboard", close_keyboard))
     dp.add_handler(CommandHandler("search_track", music_searcher.search_track))
+    dp.add_handler
     updater.start_polling()
     updater.idle()
 
