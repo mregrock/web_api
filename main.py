@@ -47,8 +47,8 @@ class AddAlbum:
         user_id = int(update.message.chat_id)
         telegram_ids = cursor.execute("SELECT telegram_id FROM users").fetchall()
         connect.commit()
-        if (user_id, ) not in telegram_ids:
-            cursor.execute("INSERT INTO users(telegram_id) VALUES(?)", (user_id, ))
+        if (user_id,) not in telegram_ids:
+            cursor.execute("INSERT INTO users(telegram_id) VALUES(?)", (user_id,))
             connect.commit()
         self.text_handler = MessageHandler(Filters.text, self.search_album)
         self.dp.add_handler(self.text_handler)
@@ -86,6 +86,16 @@ class AddAlbum:
             update.message.reply_photo(open(self.top[number][0], 'rb'), reply_markup=markup)
             os.remove(self.top[int(update.message.text) - 1][0])
             self.dp.remove_handler(self.text_handler)
+            connect = sqlite3.connect("magnitola_db.db")
+            cursor = connect.cursor()
+            albums = cursor.execute("SELECT album_yandex_id FROM albums").fetchall()
+            connect.commit()
+            album = self.top[number][1]
+            if (album.id,) not in albums:
+                artists = ', '.join(artist.name for artist in album.artists)
+                cursor.execute("INSERT INTO albums(album_name, album_artist, album_yandex_id) VALUES(?, ?, ?)",
+                               (album.title, artists, album.id))
+                connect.commit()
         except ValueError:
             update.message.reply_text("Ошибка! Введите число")
         except IndexError:
