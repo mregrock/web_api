@@ -15,6 +15,7 @@ text_handlers = list()
 
 
 def start(update, context):
+    clear_handlers()
     update.message.reply_text(
         "Привет! Я Магнитола Бот. Напишите мне номер команды и я их выполню.\n"
         + "Напиши мне /help для большей информации.",
@@ -22,12 +23,14 @@ def start(update, context):
 
 
 def help(update, context):
+    clear_handlers()
     update.message.reply_text(
         "Номера команд",
         reply_markup=markup)
 
 
 def close_keyboard(update, context):
+    clear_handlers()
     update.message.reply_text(
         "Принял к сведению.",
         reply_markup=ReplyKeyboardRemove()
