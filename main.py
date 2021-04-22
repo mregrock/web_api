@@ -220,9 +220,10 @@ class MusicSearch:
 
 
 class AlbumPrint:
-    def __init__(self):
+    def __init__(self, flag=0):
         self.user_id = 0
         self.albums = list()
+        self.flag = flag
 
     def print_album(self, update, context):
         clear_handlers()
@@ -233,9 +234,12 @@ class AlbumPrint:
             "SELECT albums.album_name, albums.album_artist, users_score.score "
             "FROM users_score INNER JOIN albums ON users_score.album_id == albums.album_yandex_id "
             "WHERE users_score.telegram_user_id == ?", (self.user_id,)).fetchall()
-        self.albums.sort(key=lambda x: x[2])
+        self.albums.sort(key=lambda x: x[2], reverse=True)
         text = list()
-        for i in range(len(self.albums)):
+        len_for = len(self.albums)
+        if self.flag == 1:
+            len_for = 5
+        for i in range(len_for):
             text.append(f"{i + 1}. {self.albums[i][0]} - {self.albums[i][1]}")
             text.append(
                 f"\n{emoji.emojize(':star:') * self.albums[i][2]} / {emoji.emojize(':star:') * 10} "
@@ -248,12 +252,14 @@ def main():
     music_searcher = MusicSearch()
     adder_album = AddAlbum()
     album_printer = AlbumPrint()
+    top_album_printer = AlbumPrint(flag=1)
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("close_keyboard", close_keyboard))
     dp.add_handler(CommandHandler("search_track", music_searcher.search_track))
     dp.add_handler(CommandHandler("add_album", adder_album.add_album))
     dp.add_handler(CommandHandler("my_albums", album_printer.print_album))
+    dp.add_handler(CommandHandler("my_best_albums", top_album_printer.print_album))
     updater.start_polling()
     updater.idle()
 
