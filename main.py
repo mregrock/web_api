@@ -117,6 +117,7 @@ class GiveScore:
         cursor.execute("INSERT INTO users_score(album_id, telegram_user_id, score) VALUES(?, ?, ?)",
                        (self.albom_id, self.user_id, number))
         connect.commit()
+        update.message.reply_text("Ваша оценка очень важна для нас")
 
 
 class AddAlbum:
