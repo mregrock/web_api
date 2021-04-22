@@ -4,10 +4,11 @@ from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, InputMediaAudio
 import yandex_music
 import os
 import sqlite3
+import emoji
 
 reply_keyboard = [['/start', '/help'],
                   ['/close_keyboard', '/search_track'],
-                  ['/add_album', '/give_score']]
+                  ['/add_album', '/my_albums']]
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
 updater = Updater("1686818986:AAGY4skTGpvDXKA7iWLgWy3RzpHz5YPAx1A", use_context=True)
 client = yandex_music.Client.from_credentials('mregrock@yandex.ru', '561867603egorkAgren$5')
@@ -138,9 +139,9 @@ class AddAlbum:
         cursor = connect.cursor()
         connect.commit()
         albums_scores = cursor.execute("SELECT album_id, telegram_user_id FROM users_score").fetchall()
-        if (self.album_id, self.user_id, ) in albums_scores:
+        if (self.album_id, self.user_id,) in albums_scores:
             cursor.execute("DELETE FROM users_score WHERE album_id == ? AND telegram_user_id == ?",
-                           (self.album_id, self.user_id, ))
+                           (self.album_id, self.user_id,))
             connect.commit()
         cursor.execute("INSERT INTO users_score(album_id, telegram_user_id, score) VALUES(?, ?, ?)",
                        (self.album_id, self.user_id, number))
@@ -218,15 +219,41 @@ class MusicSearch:
             update.message.reply_text("Ошибка! Ввведите корректное число")
 
 
+class AlbumPrint:
+    def __init__(self):
+        self.user_id = 0
+        self.albums = list()
+
+    def print_album(self, update, context):
+        clear_handlers()
+        self.user_id = int(update.message.chat_id)
+        connect = sqlite3.connect("magnitola_db.db")
+        cursor = connect.cursor()
+        self.albums = cursor.execute(
+            "SELECT albums.album_name, albums.album_artist, users_score.score "
+            "FROM users_score INNER JOIN albums ON users_score.album_id == albums.album_yandex_id "
+            "WHERE users_score.telegram_user_id == ?", (self.user_id,)).fetchall()
+        self.albums.sort(key=lambda x: x[2])
+        text = list()
+        for i in range(len(self.albums)):
+            text.append(f"{i + 1}. {self.albums[i][0]} - {self.albums[i][1]}")
+            text.append(
+                f"\n{emoji.emojize(':star:') * self.albums[i][2]} / {emoji.emojize(':star:') * 10} "
+                f"({self.albums[i][2]} / 10)\n")
+        update.message.reply_text('\n'.join(text))
+
+
 def main():
     dp = updater.dispatcher
     music_searcher = MusicSearch()
     adder_album = AddAlbum()
+    album_printer = AlbumPrint()
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("close_keyboard", close_keyboard))
     dp.add_handler(CommandHandler("search_track", music_searcher.search_track))
     dp.add_handler(CommandHandler("add_album", adder_album.add_album))
+    dp.add_handler(CommandHandler("my_albums", album_printer.print_album))
     updater.start_polling()
     updater.idle()
 
