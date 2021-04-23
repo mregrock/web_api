@@ -6,8 +6,8 @@ import os
 import sqlite3
 import emoji
 
-reply_keyboard = [['/start', '/help'],
-                  ['/close_keyboard', '/search_track'],
+reply_keyboard = [['/start', '/help', '/close_keyboard'],
+                  ['/search_track'],
                   ['/add_album', '/my_albums']]
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
 updater = Updater("1686818986:AAGY4skTGpvDXKA7iWLgWy3RzpHz5YPAx1A", use_context=True)
@@ -18,22 +18,30 @@ text_handlers = list()
 def start(update, context):
     clear_handlers()
     update.message.reply_text(
-        "Привет! Я Магнитола Бот. Напишите мне номер команды и я их выполню.\n"
-        + "Напиши мне /help для большей информации.",
+        "Здравстуй, пользователь! Я никто иной, как Магнитола Бот. Я могу выполнять некоторые, созданные "
+        "специально для меня функции. Чтобы подробно разузнать о каждой из них тебе не потребуется много усилий. "
+        "Лишь одно волшебное слово: /help. И тогда я выведу тебе всё, что я могу. А сейчас слушай музыку. Приятного "
+        "времепровождения.",
         reply_markup=markup)
 
 
 def help(update, context):
     clear_handlers()
+    star = emoji.emojize(':star:')
     update.message.reply_text(
-        "Номера команд",
+        star + " /start - функция приветствия\n" +
+        star + " /help - выводит все функции, которые поддерживает бот\n"+
+        star + "/search_track - находит данный пользователем песню, музыку, испольнителя\n" +
+        star + "/add_album - даёт способность пользователю оценить альбом для дальнейшего использования\n" +
+        star + "/my_albums - выводит всю музыку, которую когда-лиюо оценил пользователь\n",
         reply_markup=markup)
 
 
 def close_keyboard(update, context):
     clear_handlers()
     update.message.reply_text(
-        "Принял к сведению.",
+        "Достопочтенный пользователь, я рад сообщить вам, что ваша прихоть была выполнена с превеликим удовольствием. "
+        "\nПриятного времепровождения.",
         reply_markup=ReplyKeyboardRemove()
     )
 
@@ -66,6 +74,7 @@ class AddAlbum:
         if (self.user_id,) not in telegram_ids:
             cursor.execute("INSERT INTO users(telegram_id) VALUES(?)", (self.user_id,))
             connect.commit()
+        print(self.user_id)
         self.text_handler = MessageHandler(Filters.text, self.search_album)
         self.dp.add_handler(self.text_handler)
         text_handlers.append(self.text_handler)
@@ -245,7 +254,6 @@ class AlbumPrint:
                 f"\n{emoji.emojize(':star:') * self.albums[i][2]} / {emoji.emojize(':star:') * 10} "
                 f"({self.albums[i][2]} / 10)\n")
         update.message.reply_text('\n'.join(text))
-
 
 def main():
     dp = updater.dispatcher
