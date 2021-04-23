@@ -8,7 +8,8 @@ import emoji
 
 reply_keyboard = [['/start', '/help', '/close_keyboard'],
                   ['/search_track', '/search_artist'],
-                  ['/add_album', '/my_albums']]
+                  ['/add_album'],
+                  ['/my_albums', '/my_best_albums']]
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
 updater = Updater("1686818986:AAGY4skTGpvDXKA7iWLgWy3RzpHz5YPAx1A", use_context=True)
 client = yandex_music.Client.from_credentials('mregrock@yandex.ru', '561867603egorkAgren$5')
@@ -30,10 +31,12 @@ def help(update, context):
     star = emoji.emojize(':star:')
     update.message.reply_text(
         star + " /start - функция приветствия\n" +
-        star + " /help - выводит все функции, которые поддерживает бот\n"+
-        star + "/search_track - находит данный пользователем песню, музыку, испольнителя\n" +
-        star + "/add_album - даёт способность пользователю оценить альбом для дальнейшего использования\n" +
-        star + "/my_albums - выводит всю музыку, которую когда-лиюо оценил пользователь\n",
+        star + " /help - выводит все функции, которые поддерживает бот\n" +
+        star + " /search_track - находит песню, которую ввёл пользователь\n" +
+        star + " /search_artist - находит исполнителя, которого ввёл пользователь\n" +
+        star + " /add_album - даёт способность пользователю оценить альбом для дальнейшего использования\n" +
+        star + " /my_albums - выводит всю музыку, которую когда-лиюо оценил пользователь\n" +
+        star + " /my_best_albums - выводит топ-5 музыки, которую когда-лиюо оценил пользователь\n",
         reply_markup=markup)
 
 
