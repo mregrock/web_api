@@ -69,7 +69,8 @@ class AddAlbum:
         connect = sqlite3.connect("magnitola_db.db")
         cursor = connect.cursor()
         self.user_id = int(update.message.chat_id)
-        telegram_ids = cursor.execute("SELECT telegram_id FROM users").fetchall()
+        telegram_ids = cursor.execute("SELECT telegram_id "
+                                      "FROM users").fetchall()
         connect.commit()
         if (self.user_id,) not in telegram_ids:
             cursor.execute("INSERT INTO users(telegram_id) VALUES(?)", (self.user_id,))
@@ -119,7 +120,8 @@ class AddAlbum:
             self.dp.remove_handler(self.text_handler)
             connect = sqlite3.connect("magnitola_db.db")
             cursor = connect.cursor()
-            albums = cursor.execute("SELECT album_yandex_id FROM albums").fetchall()
+            albums = cursor.execute("SELECT album_yandex_id "
+                                    "FROM albums").fetchall()
             connect.commit()
             album = self.top[number][1]
             self.album_id = album.id
@@ -147,9 +149,11 @@ class AddAlbum:
         connect = sqlite3.connect("magnitola_db.db")
         cursor = connect.cursor()
         connect.commit()
-        albums_scores = cursor.execute("SELECT album_id, telegram_user_id FROM users_score").fetchall()
+        albums_scores = cursor.execute("SELECT album_id, telegram_user_id "
+                                       "FROM users_score").fetchall()
         if (self.album_id, self.user_id,) in albums_scores:
-            cursor.execute("DELETE FROM users_score WHERE album_id == ? AND telegram_user_id == ?",
+            cursor.execute("DELETE FROM users_score "
+                           "WHERE album_id == ? AND telegram_user_id == ?",
                            (self.album_id, self.user_id,))
             connect.commit()
         cursor.execute("INSERT INTO users_score(album_id, telegram_user_id, score) VALUES(?, ?, ?)",
@@ -255,11 +259,77 @@ class AlbumPrint:
                 f"({self.albums[i][2]} / 10)\n")
         update.message.reply_text('\n'.join(text))
 
+
+class Artist:
+    def __init__(self):
+        self.dp = updater.dispatcher
+        self.text_handler = None
+        self.top = list()
+
+    def artist_search(self, update, context):
+        global text_handlers
+        clear_handlers()
+        update.message.reply_text("Введите имя артиста")
+        self.text_handler = MessageHandler(Filters.text, self.artist_profile)
+        text_handlers.append(self.text_handler)
+        self.dp.add_handler(self.text_handler)
+
+    def artist_profile(self, update, context):
+        global text_handlers
+        self.top = list()
+        self.dp.remove_handler(self.text_handler)
+        del text_handlers[text_handlers.index(self.text_handler)]
+        message = update.message.text
+        search_result = client.search(message)
+        text = list()
+        if search_result.artists:
+            for i in range(min(5, len(search_result.artists.results))):
+                best = search_result.artists.results[i]
+                best_result_text = best.name
+                download_file = best_result_text + ".jpg"
+                self.top.append((download_file, search_result.artists.results[i]))
+                text.append(f'{i + 1}. {best_result_text}\n')
+        text.append('')
+        update.message.reply_text('\n'.join(text), reply_markup=markup)
+        update.message.reply_text("Введите номер артиста")
+        self.text_handler = MessageHandler(Filters.text, self.choose_artist)
+        text_handlers.append(self.text_handler)
+        self.dp.add_handler(self.text_handler)
+
+    def choose_artist(self, update, context):
+        global text_handlers
+        try:
+            self.dp.remove_handler(self.text_handler)
+            del text_handlers[text_handlers.index(self.text_handler)]
+            number = int(update.message.text) - 1
+            self.top[number][1].cover.download(self.top[number][0])
+            text = list()
+            text.append(f"{self.top[number][1].name}")
+            update.message.reply_text('\n'.join(text))
+            text = list()
+            update.message.reply_photo(open(self.top[number][0], 'rb'))
+            os.remove(self.top[number][0])
+            text.append("Лучшие треки:\n")
+            for i in range(min(5, len(self.top[number][1].popular_tracks))):
+                best = self.top[number][1].popular_tracks[i]
+                artists = ''
+                if best.artists:
+                    artists = ' - ' + ', '.join(artist.name for artist in best.artists)
+                best_result_text = best.title + artists
+                text.append(f'{i + 1}. {best_result_text}\n')
+            update.message.reply_text('\n'.join(text))
+        except ValueError:
+            update.message.reply_text("Ошибка! Введите число")
+        except IndexError:
+            update.message.reply_text("Ошибка! Ввведите корректное число")
+
+
 def main():
     dp = updater.dispatcher
     music_searcher = MusicSearch()
     adder_album = AddAlbum()
     album_printer = AlbumPrint()
+    artist_searcher = Artist()
     top_album_printer = AlbumPrint(flag=1)
     dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("help", help))
@@ -268,6 +338,7 @@ def main():
     dp.add_handler(CommandHandler("add_album", adder_album.add_album))
     dp.add_handler(CommandHandler("my_albums", album_printer.print_album))
     dp.add_handler(CommandHandler("my_best_albums", top_album_printer.print_album))
+    dp.add_handler(CommandHandler("search_artist", artist_searcher.artist_search))
     updater.start_polling()
     updater.idle()
 
