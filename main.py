@@ -252,7 +252,7 @@ class AlbumPrint:
         text = list()
         len_for = len(self.albums)
         if self.flag == 1:
-            len_for = 5
+            len_for = min(5, len_for)
         for i in range(len_for):
             text.append(f"{i + 1}. {self.albums[i][0]} - {self.albums[i][1]}")
             text.append(
