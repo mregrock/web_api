@@ -240,6 +240,7 @@ class AlbumPrint:
 
     def print_album(self, update, context):
         clear_handlers()
+        self.albums = list()
         self.user_id = int(update.message.chat_id)
         connect = sqlite3.connect("magnitola_db.db")
         cursor = connect.cursor()
