@@ -7,7 +7,7 @@ import sqlite3
 import emoji
 
 reply_keyboard = [['/start', '/help', '/close_keyboard'],
-                  ['/search_track'],
+                  ['/search_track', '/search_artist'],
                   ['/add_album', '/my_albums']]
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
 updater = Updater("1686818986:AAGY4skTGpvDXKA7iWLgWy3RzpHz5YPAx1A", use_context=True)
